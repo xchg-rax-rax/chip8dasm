@@ -1,10 +1,7 @@
-#include <ncurses.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
-#include <sys/time.h>
-#include <locale.h>
 #include <limits.h>
 
 
@@ -12,12 +9,13 @@
 
 // CPU instructions
 // each function has an name that describes it's action followed by it's associated opcode
+// Assembly syntax is taken from http://devernay.free.fr/hacks/chip8/C8TECH10.HTM
 
 void execute_machine_language_subroutine_0NNN(unsigned short opcode) {
     unsigned short NNN = opcode & 0xFFF;
     // This instruction is only used to run machine specific binary for old hardware and
     // need not be implemented in modern emulators .
-    printf("SYS $%03X\n",NNN);
+    printf("SYS %03X\n",NNN);
 }
 
 void clear_screen_00E0(unsigned short opcode) {
@@ -30,48 +28,48 @@ void return_00EE(unsigned short opcode) {
 
 void jump_to_1NNN(unsigned short opcode) {
     unsigned short NNN = opcode & 0xFFF;
-    printf("JUMP $%03x\n",NNN);
+    printf("JP %03x\n",NNN);
 }
 
 void execute_subroutine_2NNN(unsigned short opcode) {
     unsigned short NNN = opcode & 0xFFF;
-    printf("CALL $%03x\n",NNN);
+    printf("CALL %03x\n",NNN);
 }
 
 void skip_if_VX_equals_NN_3XNN(unsigned short opcode) {
     unsigned short X = (opcode & 0xF00) >> 8;
     unsigned char NN = opcode & 0xFF;
-    printf("SKIP.EQ V%X, $%02X\n",X,NN);
+    printf("SE V%X, %02X\n",X,NN);
 }
 
 void skip_if_not_VX_equal_NN_4XNN(unsigned short opcode) {
     unsigned short X = (opcode & 0xF00) >> 8;
     unsigned char NN = opcode & 0xFF;
-    printf("SKIP.NE V%X, $%02X\n",X,NN);
+    printf("SNE V%X, %02X\n",X,NN);
 }
 
 void skip_if_VX_equal_VY_5XY0(unsigned short opcode) {
     unsigned short X = (opcode & 0xF00) >> 8;
     unsigned short Y = (opcode & 0xF0) >> 4;
-    printf("SKIP.EQ V%X, V%X\n",X,Y);
+    printf("SE V%X, V%X\n",X,Y);
 }
 
 void load_NN_into_VX_6XNN(unsigned short opcode) {
     unsigned short X = (opcode & 0xF00) >> 8;
     unsigned char NN = opcode & 0xFF;
-    printf("LOAD V%X, $%02X\n",X,NN);
+    printf("LD V%X, %02X\n",X,NN);
 }
 
 void add_NN_to_VX_7XNN(unsigned short opcode) {
     unsigned short X = (opcode & 0xF00) >> 8;
     unsigned char NN = opcode & 0xFF;
-    printf("ADI V%X, $%02X\n", X, NN);
+    printf("ADD V%X, %02X\n", X, NN);
 }
 
 void mov_VX_to_VY_8XY0(unsigned short opcode) {
     unsigned short X = (opcode & 0xF00) >> 8;
     unsigned short Y = (opcode & 0xF0) >> 4;
-    printf("MOV V%X,, V%X\n", X, Y);
+    printf("LD V%X,, V%X\n", X, Y);
 }
 
 void set_VX_to_VX_OR_VY_8XY1(unsigned short opcode) {
@@ -133,7 +131,7 @@ void left_shift_VY_store_in_VX_8XYE(unsigned short opcode) {
 void skip_if_VX_not_equal_VY_9XY0(unsigned short opcode) {
     unsigned short X = (opcode & 0xF00) >> 8;
     unsigned short Y = (opcode & 0xF0) >> 4;
-    printf("SKIP.NE V%X, V%X\n",X,Y);
+    printf("SNE V%X, V%X\n",X,Y);
 }
 
 void store_NNN_in_I_ANNN(unsigned short opcode) {
@@ -143,50 +141,50 @@ void store_NNN_in_I_ANNN(unsigned short opcode) {
 
 void jump_to_NNN_plus_V0_BNNN(unsigned short opcode) {
     unsigned short NNN = opcode & 0xFFF;
-    printf("JUMP $%03X\n", NNN);
+    printf("JP %03X\n", NNN);
 }
 
 void set_VX_to_random_with_mask_NN_CXNN(unsigned short opcode) {
     unsigned short X = (opcode & 0xF00) >> 8;
     unsigned short NN = opcode & 0xFF;
-    printf("RND V%X, $%02X\n", X, NN);
+    printf("RND V%X, %02X\n", X, NN);
 }
 
 void draw_N_sprite_at_VX_VY_DXYN(unsigned short opcode) {
     unsigned short X = (opcode & 0xF00) >> 8;
     unsigned short Y = (opcode & 0xF0) >> 4;
     unsigned short N = (opcode & 0xF);
-    printf("DRW V%X, V%X $%X\n", X, Y, N);
+    printf("DRW V%X, V%X %X\n", X, Y, N);
 }
 
 void skip_if_VX_key_pressed_EX9E(unsigned short opcode) {
     unsigned short X = (opcode & 0xF00) >> 8;
-    printf("SKIP.KP V%X\n", X);
+    printf("SKP V%X\n", X);
 }
 
 void skip_if_VX_not_pressed_EXA1(unsigned short opcode) {
     unsigned short X = (opcode & 0xF00) >> 8;
-    printf("SKIP.NP V%X\n", X);
+    printf("SKNP V%X\n", X);
 }
 
 void store_delay_timer_in_VX_FX07(unsigned short opcode) {
     unsigned short X = (opcode & 0xF00) >> 8;
-    printf("LOAD V%X, DT\n", X);
+    printf("LD V%X, DT\n", X);
 }
 
 void store_keypress_in_VX_FX0A(unsigned short opcode) {
     unsigned short X = (opcode & 0xF00) >> 8;
-    printf("LOAD V%X, K\n", X);
+    printf("LD V%X, K\n", X);
 }
 
 void set_delay_timer_to_VX_FX15(unsigned short opcode) {
     unsigned short X = (opcode & 0xF00) >> 8;
-    printf("LOAD DT, V%X\n", X);
+    printf("LD DT, V%X\n", X);
 }
 
 void set_sound_timer_to_VX_FX18(unsigned short opcode) {
     unsigned short X = (opcode & 0xF00) >> 8;
-    printf("LOAD ST, V%X\n", X);
+    printf("LD ST, V%X\n", X);
 }
 
 void add_VX_to_I_FX1E(unsigned short opcode) {
@@ -196,22 +194,22 @@ void add_VX_to_I_FX1E(unsigned short opcode) {
 
 void set_I_to_addr_of_VX_sprite_FX29(unsigned short opcode) {
     unsigned short X = (opcode & 0xF00) >> 8;
-    printf("LOAD F, V%X", X);
+    printf("LD F, V%X", X);
 }
 
 void store_VX_as_BCD_at_I_FX33(unsigned short opcode) {
     unsigned short X = (opcode & 0xF00) >> 8;
-    printf("LOAD B, V%X\n",X);
+    printf("LD B, V%X\n",X);
 }
 
 void store_V0_to_VX_in_I_FX55(unsigned short opcode) {
     unsigned short X = (opcode & 0xF00) >> 8;
-    printf("LOAD [I], V%X",X);
+    printf("LD [I], V%X",X);
 }
 
 void set_V0_to_VX_to_I_FX65(unsigned short opcode) {
     unsigned short X = (opcode & 0xF00) >> 8;
-    printf("LOAD V%X, [I]\n",X);
+    printf("LD V%X, [I]\n",X);
 }
 
 // Initialization Functions
@@ -389,7 +387,7 @@ int main(int argc, char* argv[]) {
     if (argc < 2){
         printf("Error: No ROM specified.");
         printf("Usage: chip8_emulator <location of ROM>\n");
-        return 1;
+        exit(EXIT_FAILURE);
     }
 
     memset(memory, 0, sizeof(memory));
